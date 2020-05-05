@@ -16,29 +16,26 @@ import scala.io.Source.fromInputStream
 sealed trait gitHubObject
 
 object gitHubObject {
-  sealed trait HttpUriRequest extends gitHubObject
-  sealed trait Client extends gitHubObject
+  //Trait is mandatory when creating a gitHubObject for the user
   sealed trait authCode extends gitHubObject
 
   val BASE_GHQL_URL = "https://api.github.com/graphql"
   val temp = "{viewer {email login url}}"
-
   ///Builder hiding complexity but demanding these traits
   type MandatoryInfo = authCode
 }
 
 case class Github[I <: gitHubObject](key:String = ""){
-  //User can choose to build with partial
-  //httpUriRequest:Option[HttpPost] = Some(gitHubObject.httpUriRequest),
-  //def withHTTP(httpUriRequest:Option[HttpPost]): Github[I with gitHubObject.HttpUriRequest] =
-    //this.copy(httpUriRequest = httpUriRequest)
-
+  /*  User must build with partial (Auth Code)
+  *
+  *   Can add customizations here
+  *
+  *
+  * */
   def withAuthCode(key:String):Github[I with gitHubObject.authCode] =
     this.copy(key = key)
 
   def build(implicit ev: I =:= gitHubObject.MandatoryInfo): Option[GHQLResponse] = {
-
-    //val closeable_connection: CloseableHttpClient = HttpClientBuilder.create.build
 
     val httpUriRequest = new HttpPost(gitHubObject.BASE_GHQL_URL)
     /// gqlReq => function to set any entity based on given (String)
@@ -48,18 +45,23 @@ case class Github[I <: gitHubObject](key:String = ""){
       httpUriRequest.addHeader("Authorization", "Bearer " + key)
       httpUriRequest.addHeader("Accept", "application/json")
 
-    //Some(GHQLResponse(httpUriRequest,closeable_connection))
     Some(GHQLResponse(httpUriRequest))
   }
 
   //Build entire object for user with all mandatory info
 }
 case class GHQLResponse(httpUriRequest:HttpPost){
+  /*
+  *   Create connection for user to receive queries
+  *
+  *   setAndGet(str: String) will send the response back to the user when called via a GithubObject
+  * */
   def setAndGet(str: String): String = {
     val closeable_connection: CloseableHttpClient = HttpClientBuilder.create.build
     httpUriRequest.setEntity(new StringEntity(str))
     val response = closeable_connection.execute(httpUriRequest)
     val setAndGet = Logger(LoggerFactory.getLogger("logger"))
+    //Response successful or fails
     response.getEntity match {
       case null => {
         setAndGet.trace("Sending null data")

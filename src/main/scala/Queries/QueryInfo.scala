@@ -55,7 +55,6 @@ case class GithubQuery [I <: QueryInfo ](queryType: RequestType.QueryRequest = M
     Some(currentSate)
   }
 
-
   def build(implicit ev : I =:= QueryInfo.EssentialInfo) : GHQLResponse => Option[Seq[Repo]] = {
     queryType match {
       case SpecificUser if userLogin.equals("") => GenerateList(Query(MyRepos.toString, filterFunctions, MyRepos))
@@ -64,7 +63,6 @@ case class GithubQuery [I <: QueryInfo ](queryType: RequestType.QueryRequest = M
       case MyContributedToRepos =>  GenerateList(Query(queryType.toString, filterFunctions, MyContributedToRepos))
     }
   }
-
 }
 
 // Contains actual query for github's GraphQL endpoint and filter to apply once obtaining Repos

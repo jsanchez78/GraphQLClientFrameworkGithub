@@ -1,7 +1,7 @@
 package Tests
 
-import Queries.RequestType.MyRepos
-import Queries.{GithubQuery, QueryInfo, RequestType}
+import Queries.RequestType.{MyContributedToRepos, MyRepos, SpecificUser}
+import Queries._
 import RepoParser.JSONParser
 import gitHubObject.{GHQLResponse, Github, client_data, gitHubObject}
 import jdk.nashorn.internal.parser.JSONParser
@@ -13,7 +13,28 @@ class Test03 extends FunSuite{
 
   val other_githubObject: Option[GHQLResponse] = new Github[gitHubObject]().withAuthCode(client_data.GetAuthCodeFromConfig()).build
 
+  val test = new Github[gitHubObject]().withAuthCode(client_data.GetAuthCodeFromConfig()).build
 
+  //println(test.flatMap().setAndGet(client_data.repos))
+  val Github = (new Github[gitHubObject]).withAuthCode(client_data.GetAuthCodeFromConfig()).build
+
+  val MyRepoQuery = GithubQuery[QueryInfo]().withQueryType(MyRepos)
+  val OptionReposList = Github.flatMap(MyRepoQuery.build)
+  val ReposList = OptionReposList.get
+
+
+  val MyContributedRepoQuery = GithubQuery[QueryInfo]().withQueryType(MyContributedToRepos)
+  val OptionReposList2 = Github.flatMap(MyContributedRepoQuery.build)
+  val ReposList2 = OptionReposList2.get
+
+  val SpecificUserQuery = GithubQuery[QueryInfo]().withQueryType(SpecificUser).withSpecificUser("wisabi")
+  val OptionReposList3 = Github.flatMap(SpecificUserQuery.build)
+  val ReposList3 = OptionReposList3.get
+
+
+  for (e <- ReposList){
+    e.printRepoInfo
+  }
   test("Builder pattern with phantom types with mandatory info"){
 
   }
@@ -28,7 +49,6 @@ class Test03 extends FunSuite{
 
   test("Get Languages returns valid language per Repo"){
 
-
     val MyRepoQuery = GithubQuery[QueryInfo]().withQueryType(MyRepos)
     val MyReposList = githubObject.flatMap(MyRepoQuery.build)
     val ReposList = MyReposList.get
@@ -36,11 +56,11 @@ class Test03 extends FunSuite{
     val test = List("Ruby", "JavaScript", "CSS")
     val actual = ReposList(0).getLanguages
 
-
-
     assert(actual == test)
 
-
   }
+
+
+
 
 }
